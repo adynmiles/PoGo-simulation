@@ -136,11 +136,6 @@ analyzer_eff = np.column_stack(
     )
 )
 
-# Load the extinction ratio
-extinction_ratio = np.array(
-    pd.read_excel("polarization_performance.xlsx", sheet_name="Thorlabs UB Polarizer")
-)
-
 # Parameters for polarimetric accuracy
 mount_accuracy = np.deg2rad(0.14)  # Accuracy of rotation mount (deg)
 delta_accuracy = 0.01
