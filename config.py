@@ -117,8 +117,8 @@ F = 138  # Retardance amplitude (degrees)
 J_1 = 0.52  # Bessel coefficient J_1
 J_2 = 0.43  # Bessel coefficient J_2
 omega = 42000  # Frequency of photoelastic modulator (Hz)
-psi = np.deg2rad(20)  # Psi system input (degrees)
-delta = np.deg2rad(160)  # Delta system input (degrees)
+psi = np.deg2rad(45)  # Psi system input (degrees)
+delta = np.deg2rad(20)  # Delta system input (degrees)
 delta_0 = 1e-5  # Static retardation of PEM (rad.)
 t_meas = 0.3  # Measurement time (s)
 
@@ -135,10 +135,12 @@ analyzer_eff = np.column_stack(
         (0.5 * polar_eff[:, 1] / 100),
     )
 )
+er = np.array(pd.read_excel("polarization_performance.xlsx", sheet_name="Thorlabs UB Polarizer"))
+extinction = er[:, 1]
 
 # Parameters for polarimetric accuracy
 mount_accuracy = np.deg2rad(0.14)  # Accuracy of rotation mount (deg)
-delta_accuracy = 0.01
+delta_accuracy = 0.01   # Delta accuracy requirement (deg)
 
 ### LENSES ###
 # lens_transmittance = 0.9  # Transmittance of CaF2 lens (average) (%)

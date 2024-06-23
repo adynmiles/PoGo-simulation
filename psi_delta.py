@@ -108,31 +108,31 @@ def nsc(
 
     # Show magnitude of X and Y lock-in outputs if true.
     if show_filtered_outputs:
-        plt.rc("font", size=18)
+        plt.rc("font", size=24)
         plt.figure()
         plt.grid()
-        plt.plot(t * 1e6, I_lp_1f_cos, linewidth=2.0)
+        plt.plot(t * 1e6, I_lp_1f_cos, linewidth=4.0)
         plt.title("$\omega = 42$ kHz cosine filtering output")
         plt.xlabel("Time ($\mu$s)")
         plt.ylabel("$X$ Magnitude")
         plt.figure()
         plt.grid()
-        plt.rc("font", size=18)
-        plt.plot(t * 1e6, I_lp_1f_sin, linewidth=2.0)
+        plt.rc("font", size=24)
+        plt.plot(t * 1e6, I_lp_1f_sin, linewidth=4.0)
         plt.title("$\omega = 42$ kHz sine filtering output")
         plt.xlabel("Time ($\mu$s)")
         plt.ylabel("$Y$ Magnitude")
         plt.figure()
         plt.grid()
-        plt.rc("font", size=18)
-        plt.plot(t * 1e6, I_lp_2f_cos, linewidth=2.0)
+        plt.rc("font", size=24)
+        plt.plot(t * 1e6, I_lp_2f_cos, linewidth=4.0)
         plt.title("$2\omega = 84$ kHz cosine filtering output")
         plt.xlabel("Time ($\mu$s)")
         plt.ylabel("$X$ Magnitude")
         plt.figure()
         plt.grid()
-        plt.rc("font", size=18)
-        plt.plot(t * 1e6, I_lp_2f_sin, linewidth=2.0)
+        plt.rc("font", size=24)
+        plt.plot(t * 1e6, I_lp_2f_sin, linewidth=4.0)
         plt.title("$2\omega = 84$ kHz sine filtering output")
         plt.xlabel("Time ($\mu$s)")
         plt.ylabel("$Y$ Magnitude")
@@ -291,4 +291,4 @@ def psi_delta(
             f"S_1: {np.round(S_1, 3)}, S_2: {np.round(S_2, 3)}, S_3: {np.round(S_3, 3)}"
         )
 
-    return np.abs(psi), np.abs(delta), [S_1, S_2, S_3]
+    return np.abs(psi), np.abs(delta), [S_1, S_2, S_3], [DOLP, AOLP, DOCP]

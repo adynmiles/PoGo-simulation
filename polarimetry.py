@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import config as cfg
 from scipy.special import jv
+import random
 
 '''
 polarimetry.py
@@ -10,7 +11,7 @@ Measures polarization states using Jones matrices.
 
 '''
 
-def polarimetry(A_angle, P_angle, M_angle, retardance_angle, psi_input, delta_input, detector_noise, sampling_noise, plot_intensity=False):
+def polarimetry(A_angle, P_angle, M_angle, retardance_angle, psi_input, delta_input, detector_noise, sampling_noise, extinction_ratio, nsr, plot_intensity=False):
     '''
     This function produces an input signal to the detector and returns the intensity of the signal, varying in time.
 
@@ -46,6 +47,7 @@ def polarimetry(A_angle, P_angle, M_angle, retardance_angle, psi_input, delta_in
     if detector_noise:
         noise = np.random.uniform(-cfg.nsr, cfg.nsr, sample_rate)
 
+
     # Bessel terms calculation
     J_0 = jv(0, retardance_angle)
     J_1 = jv(1, retardance_angle)
@@ -74,9 +76,10 @@ def polarimetry(A_angle, P_angle, M_angle, retardance_angle, psi_input, delta_in
 
     # Main loop where the signal intensity is built using the coefficients and the time steps.
     for step, t_step in enumerate(t):
-        I.append(I_0 * (alpha_0 + (2*alpha_1*J_1*np.sin(omega*t_step)) + (alpha_2*(J_0 + (2*J_2))*np.cos(2*omega*t_step))))
+        I.append(I_0 * (((1 + extinction_ratio)*alpha_0) + ((1 - extinction_ratio)*2*alpha_1*J_1*np.sin(omega*t_step)) + ((1 + extinction_ratio)*alpha_2*(J_0 + (2*J_2))*np.cos(2*omega*t_step))))
+        I[step] += I[step]*nsr
         if detector_noise:
-            I[step] += noise[step]
+            I[step] += I[step]*noise[step]
 
     # Storing the expected coefficient values for comparison with lock-in amplifier outputs.
     coeff_0 = I_0*alpha_0
@@ -85,9 +88,9 @@ def polarimetry(A_angle, P_angle, M_angle, retardance_angle, psi_input, delta_in
 
     # If true, plot signal intensity for the first few periods.
     if plot_intensity:
-        plt.rc('font', size=18)
+        plt.rc('font', size=24)
         plt.figure()
-        plt.plot(t[:100]*(1e6), I[:100], linewidth=3.0)
+        plt.plot(t[:100]*(1e6), I[:100], linewidth=4.0)
         plt.grid()
         plt.title("Signal read by detector")
         plt.xlabel("Time elapsed ($\mu s$)")

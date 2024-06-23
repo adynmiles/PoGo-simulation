@@ -14,7 +14,7 @@ This script runs a Monte Carlo simulation of the various perturbations that can 
 This includes angular perturbations, retardance perturbations, and extinction ratio.
 '''
 
-def monte_carlo(n_iter, errors, inputs, mc_sim, config='delta', psi_plot=False, delta_plot=False):
+def monte_carlo(n_iter, errors, inputs, mc_sim, config='delta', show_plots=False):
     '''
     This function runs a Monte Carlo simulation for a given set of errors at a given Psi and Delta input. It uses the psi_delta.py
     file to apply the lock-in amplifier to the signal and calculate Psi and Delta.
@@ -37,6 +37,8 @@ def monte_carlo(n_iter, errors, inputs, mc_sim, config='delta', psi_plot=False, 
     residual_birefringence_err = errors[4] # Static retardation error
     detector_noise = errors[5]  # Detector noise due to SNR
     sampling_noise = errors[6]  # Sampling noise from pre-amplifier limitations.
+    extinction_ratio = errors[7]  # Extinction ratio from polarizers
+    noise = errors[8]
 
     psi_input = inputs[0] # Psi for the input signal
     delta_input = inputs[1] # Delta for the input signal
@@ -49,6 +51,9 @@ def monte_carlo(n_iter, errors, inputs, mc_sim, config='delta', psi_plot=False, 
     S_1_list = []
     S_2_list = []
     S_3_list = []
+    dolp_list = []
+    aolp_list = []
+    docp_list = []
 
     ### MAIN MONTE CARLO LOOP ###
     for i in tqdm(range(int(n_iter))):
@@ -87,14 +92,14 @@ def monte_carlo(n_iter, errors, inputs, mc_sim, config='delta', psi_plot=False, 
                     retardance_angle = np.deg2rad(138 + (retardance_err*138))
         
             # First gather the input signal
-            I, expected_coeffs, = polarimetry(A_angle, P_angle, M_angle, retardance_angle, psi_input, delta_input, detector_noise, sampling_noise)
+            I, expected_coeffs, = polarimetry(A_angle, P_angle, M_angle, retardance_angle, psi_input, delta_input, detector_noise, sampling_noise, extinction_ratio, noise)
             # Calculating N, S, and C using both configurations.
             if configuration == 1:
                 N, S, _, N_actual, S_actual, _ = nsc(I, A_angle, configuration, expected_coeffs, residual_birefringence_err, sampling_noise)
             elif configuration == 2:
                 _, _, C, _, _, C_actual = nsc(I, A_angle, configuration, expected_coeffs, residual_birefringence_err, sampling_noise)
         # Calculating Psi, Delta, and the other parameters once N, S, and C have all been calculated
-        psi, delta, stokes = psi_delta(N, S, C, [N_actual, S_actual, C_actual], config, delta_input, psi_input)
+        psi, delta, stokes, other_params = psi_delta(N, S, C, [N_actual, S_actual, C_actual], config, delta_input, psi_input)
 
         # Update output lists
         psi_list.append(np.rad2deg(psi))
@@ -102,28 +107,33 @@ def monte_carlo(n_iter, errors, inputs, mc_sim, config='delta', psi_plot=False, 
         S_1_list.append(stokes[0])
         S_2_list.append(stokes[1])
         S_3_list.append(stokes[2])
+        dolp_list.append(other_params[0])
+        aolp_list.append(other_params[1])
+        docp_list.append(other_params[2])
 
-    # If psi_plot is true, output a histogram showing the outputs relative to the input.
-    if psi_plot:
+    # If this function is set to the psi configuration, output a histogram showing the outputs relative to the input.
+    if config == 'psi' and show_plots:
+        plt.rc('font', size=18)
         plt.figure()
         psi_hist, bins, patches = plt.hist(psi_list, bins=20)
         plt.axvline(x=np.rad2deg(psi_input), color='red', linewidth=2, linestyle='--')
-        plt.title("Simulated Error Results")
-        plt.xlabel("$\Psi$")
+        plt.title(f"Simulated $\Psi$ Error Results at $\Psi$ = {np.rad2deg(psi_input)}°, $\Delta$ = {np.rad2deg(delta_input)}°")
+        plt.xlabel("$\Psi$ [°]")
         plt.ylabel("Count")
         plt.show()
 
-    # If delta_plot is true, output a histogram showing the outputs relative to the input.
-    if delta_plot:
+    # If this is function is set to the delta configuration, output a histogram showing the outputs relative to the input.
+    if config == 'delta' and show_plots:
+        plt.rc('font', size=18)
         plt.figure()
         delta_hist, bins, patches = plt.hist(delta_list, bins=20)
         plt.axvline(x=np.rad2deg(delta_input), color='red', linewidth=2, linestyle='--')
-        plt.title("Simulated Error Results")
-        plt.xlabel("$\Delta$")
+        plt.title(f"Simulated $\Delta$ Error Results at $\Psi$ = {np.rad2deg(psi_input)}°, $\Delta$ = {np.rad2deg(delta_input)}°")
+        plt.xlabel("$\Delta$ [°]")
         plt.ylabel("Count")
         plt.show()
 
-    return psi_list, delta_list, S_1_list, S_2_list, S_3_list
+    return psi_list, delta_list, S_1_list, S_2_list, S_3_list, dolp_list, aolp_list, docp_list
 
 
 if __name__ == '__main__':
@@ -132,11 +142,15 @@ if __name__ == '__main__':
     delta = cfg.delta
 
     polarizer_err = 1
-    analyzer_err = 1
+    analyzer_err = 0
+    pol_mod_err = 0
     retardance_err = 0
+    residual_birefringence_error = 0
+    detector_noise = False
+    sampling_noise = False
 
     n_iter = 100
 
-    psi_list, delta_list, s_1_list, s_2_list, s_3_list = monte_carlo(n_iter, [polarizer_err, analyzer_err, retardance_err], [psi, delta], config='delta', psi_plot=False, delta_plot=True)
+    mc_sim = True
 
-    print("Monte Carlo done")
+    psi_list, delta_list, s_1_list, s_2_list, s_3_list, dolp_list, aolp_list, docp_list = monte_carlo(n_iter, [polarizer_err, analyzer_err, pol_mod_err, retardance_err, residual_birefringence_error, detector_noise, sampling_noise], [psi, delta], mc_sim=True, config='delta', show_plots=True)
